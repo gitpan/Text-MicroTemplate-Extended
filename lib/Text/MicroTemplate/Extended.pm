@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.01001';
+our $VERSION = '0.01002';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -34,15 +34,17 @@ sub block {
         code        => \$code,
     };
 
-    my \$current_ref = \$$self->{package_name}::_MTREF;
-    my \$block_ref   = \$block->{context_ref};
-
-    my \$rendered = \$\$current_ref;
-    \$\$block_ref = '';
-
-    my \$result = \$block->{code}->();
-
-    \$\$current_ref = (\$rendered || '') . (\$result || '');
+    if (!context->{extends}) {
+        my \$current_ref = \$$self->{package_name}::_MTREF;
+        my \$block_ref   = \$block->{context_ref};
+        
+        my \$rendered = \$\$current_ref;
+        \$\$block_ref = '';
+        
+        my \$result = \$block->{code}->() || \$\$block_ref;
+        
+        \$\$current_ref = (\$rendered || '') . (\$result || '');
+    }
 }
 ...
 
@@ -61,7 +63,10 @@ sub extension {
     $self->{extension};
 }
 
-*render = \&render_file;
+{
+    no warnings 'once';
+    *render = \&render_file;
+}
 
 sub render_file {
     my $self     = shift;
