@@ -3,50 +3,52 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.01003';
+our $VERSION = '0.02';
 
 sub new {
     my $self = shift->SUPER::new(@_);
 
     $self->{template_args} ||= {};
     $self->{extension}     ||= '.mt';
+    my $m = $self->{macro} ||= {};
 
-    no warnings 'redefine';
-
-    eval <<"...";
-package $self->{package_name};
-
-sub context {
-    no warnings;
-    \$self->{render_context};
-}
-
-sub extends {
-    my \$template = shift;
-    context->{extends} = \$template;
-}
-
-sub block {
-    my (\$name, \$code) = \@_;
-
-    my \$block = context->{blocks}{\$name} ||= {
-        context_ref => \$$self->{package_name}::_MTREF,
-        code        => \$code,
+    # install default macros to support template inheritance
+    $m->{extends} = sub {
+        $self->render_context->{extends} = $_[0];
     };
 
-    if (!context->{extends}) {
-        my \$current_ref = \$$self->{package_name}::_MTREF;
-        my \$block_ref   = \$block->{context_ref};
-        
-        my \$rendered = \$\$current_ref;
-        \$\$block_ref = '';
-        
-        my \$result = \$block->{code}->() || \$\$block_ref;
-        
-        \$\$current_ref = (\$rendered || '') . (\$result || '');
+    $m->{block} = sub {
+        my ($name, $code) = @_;
+
+        no strict 'refs';
+        my $block = $self->render_context->{blocks}{$name} ||= {
+            context_ref => ${"$self->{package_name}::_MTREF"},
+            code        => $code,
+        };
+
+        if (!$self->render_context->{extends}) {
+            my $current_ref = ${"$self->{package_name}::_MTREF"};
+            my $block_ref   = $block->{context_ref};
+
+            my $rendered = $$current_ref || '';
+            $$block_ref = '';
+
+            my $result = $block->{code}->() || $$block_ref || '';
+
+            $$current_ref = $rendered . $result;
+        }
+    };
+
+    for my $name (keys %{ $self->{macro} }) {
+        unless ($name =~ /^[a-zA-Z_][a-zA-Z0-9_]*$/) {
+            die qq{Invalid macro key name: "$name"};
+        }
+
+        no strict 'refs';
+        my $code = $self->{macro}{$name};
+        *{ $self->package_name . "::$name" }
+            = ref $code eq 'CODE' ? $code : sub {$code};
     }
-}
-...
 
     $self;
 }
@@ -148,6 +150,10 @@ sub {
 }
 ...
 }
+
+1;
+
+__END__
 
 =head1 NAME
 
@@ -318,6 +324,32 @@ Then in template:
 
 This template display 'bar'.
 
+C<template_args> also supports CodeRef as its value life below:
+
+    my $mf = Text::MicroTemplate::Extended->new(
+        template_args => { foo => sub { $self->get_foo() } },
+        ...
+    );
+
+In template, you can C<<?= $foo ?> to show C<$foo> value. this value is set by calling C<$self->get_foo> in template process time.
+
+This feature is useful to set variable does not exists when template object is created.
+
+=head2 Macro
+
+Similar to named arguments, but this feature install your subroutine to template instead of variables.
+
+    my $mh = Text::MicroTemplate::Extended->new(
+        macro => {
+            hello => sub { return 'Hello World!' },
+        },
+        ...
+    );
+
+And in template:
+
+    <?= hello() ?> # => 'Hello World'
+
 =head2 extension option
 
 There is another new option 'extension'. You can specify template file extension.
@@ -397,5 +429,3 @@ The full text of the license can be found in the
 LICENSE file included with this module.
 
 =cut
-
-1;
