@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.02002';
+our $VERSION = '0.03';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -21,10 +21,17 @@ sub new {
         my ($name, $code) = @_;
 
         no strict 'refs';
-        my $block = $self->render_context->{blocks}{$name} ||= {
-            context_ref => ${"$self->{package_name}::_MTREF"},
-            code        => $code,
-        };
+        my $block;
+        if ($code) {
+            $block = $self->render_context->{blocks}{$name} ||= {
+                context_ref => ${"$self->{package_name}::_MTREF"},
+                code        => ref($code) eq 'CODE' ? $code : sub { return $code },
+            };
+        }
+        else {
+            $block = $self->render_context->{blocks}{$name}
+                or die qq[block "$name" does not define];
+        }
 
         if (!$self->render_context->{extends}) {
             my $current_ref = ${"$self->{package_name}::_MTREF"};
