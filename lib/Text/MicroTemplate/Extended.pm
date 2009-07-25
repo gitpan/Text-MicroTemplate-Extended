@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.03001';
+our $VERSION = '0.03002';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -153,6 +153,7 @@ sub eval_builder {
     eval <<"...";
 package $self->{package_name};
 sub {
+#line 1
     $self->{render_context}{args};
     Text::MicroTemplate::encoded_string(($self->{render_context}{code})->(\@_));
 }
