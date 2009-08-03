@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.03002';
+our $VERSION = '0.04';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -86,7 +86,7 @@ sub render_file {
     $self->render_context($context);
 
     my $renderer = $self->build_file( $template . $self->extension );
-    my $result   = $renderer->(@_)->as_string;
+    my $result   = $renderer->(@_);
 
     if (my $parent = delete $context->{extends}) {
         $result = $self->render($parent);
