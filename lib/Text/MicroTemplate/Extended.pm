@@ -3,13 +3,13 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 sub new {
     my $self = shift->SUPER::new(@_);
 
     $self->{template_args} ||= {};
-    $self->{extension}     ||= '.mt';
+    $self->{extension}     ||= '.mt' unless defined $self->{extension};
     my $m = $self->{macro} ||= {};
 
     # install default macros to support template inheritance
