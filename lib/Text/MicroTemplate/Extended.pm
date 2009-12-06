@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -36,6 +36,7 @@ sub new {
         if (!$self->render_context->{extends}) {
             my $current_ref = ${"$self->{package_name}::_MTREF"};
             my $block_ref   = $block->{context_ref};
+            local ${"$self->{package_name}::_MTEREF"} = $block_ref;
 
             my $rendered = $$current_ref || '';
             $$block_ref = '';
