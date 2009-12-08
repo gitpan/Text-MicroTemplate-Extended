@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -17,12 +17,22 @@ sub new {
         $self->render_context->{extends} = $_[0];
     };
 
+    my $super = '';
+    $m->{super} = sub { $super };
+
     $m->{block} = sub {
         my ($name, $code) = @_;
 
         no strict 'refs';
         my $block;
         if (defined $code) {
+            if ($self->render_context->{blocks}{$name}) {
+                unshift @{ $self->render_context->{super}{$name}}, {
+                    context_ref => ${"$self->{package_name}::_MTREF"},
+                    code        => ref($code) eq 'CODE' ? $code : sub { return $code },
+                };
+            }
+
             $block = $self->render_context->{blocks}{$name} ||= {
                 context_ref => ${"$self->{package_name}::_MTREF"},
                 code        => ref($code) eq 'CODE' ? $code : sub { return $code },
@@ -35,15 +45,13 @@ sub new {
 
         if (!$self->render_context->{extends}) {
             my $current_ref = ${"$self->{package_name}::_MTREF"};
-            my $block_ref   = $block->{context_ref};
-            local ${"$self->{package_name}::_MTEREF"} = $block_ref;
-
             my $rendered = $$current_ref || '';
-            $$block_ref = '';
 
-            my $result = $block->{code}->() || $$block_ref || '';
+            $super = Text::MicroTemplate::encoded_string($self->_render_block($_))
+                for (@{ $self->render_context->{super}{$name} || [] });
 
-            $$current_ref = $rendered . $result;
+            $$current_ref = $rendered . $self->_render_block($block);
+            $super = '';
         }
     };
 
@@ -101,6 +109,18 @@ sub render_file {
     $self->render_context(undef);
 
     $result;
+}
+
+sub _render_block {
+    my ($self, $block) = @_;
+
+    no strict 'refs';
+
+    my $block_ref   = $block->{context_ref};
+    local ${"$self->{package_name}::_MTEREF"} = $block_ref;
+
+    $$block_ref = '';
+    my $result = $block->{code}->() || $$block_ref || '';
 }
 
 sub include_file {
@@ -316,6 +336,10 @@ More C<<? block ?>> tags in your base templates are better. Remember, child temp
 =item *
 
 If you find yourself duplicating content in a number of templates, it probably means you should move that content to a C<<? block ?>> in a parent template.
+
+=item *
+
+If you need to get the content of the block from the parent template, the C<< <?= super() ?> >> variable will do the trick. This is useful if you want to add to the contents of a parent block instead of completely overriding it. Data inserted using C<< <?= super() ?> >> will not be automatically escaped, since it was already escaped, if necessary, in the parent template.
 
 =item *
 
