@@ -4,11 +4,10 @@ author:
   - 'Daisuke Murase <typester@cpan.org>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
-  Test::More: 0
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
-generated_by: 'Module::Install version 0.91'
+generated_by: 'Module::Install version 0.97'
 license: perl
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -16,10 +15,13 @@ meta-spec:
 name: Text-MicroTemplate-Extended
 no_index:
   directory:
+    - example
     - inc
     - t
 requires:
-  Text::MicroTemplate: 0.09
+  Filter::Util::Call: 0
+  Text::MicroTemplate: 0.13
 resources:
   license: http://dev.perl.org/licenses/
-version: 0.09
+  repository: git://github.com/typester/text-microtemplate-extended-perl.git
+version: 0.10

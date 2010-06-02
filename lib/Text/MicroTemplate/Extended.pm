@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -264,8 +264,8 @@ A child template might look like this:
     
     ? block content => sub {
     ? for my $entry (@$blog_entries) {
-        <h2><? $entry->title ?></h2>
-        <p><? $entry->body ?></p>
+        <h2><?= $entry->title ?></h2>
+        <p><?= $entry->body ?></p>
     ? } # endfor
     ? } # endblock
 
