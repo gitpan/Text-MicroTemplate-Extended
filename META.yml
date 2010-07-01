@@ -4,6 +4,8 @@ author:
   - 'Daisuke Murase <typester@cpan.org>'
 build_requires:
   ExtUtils::MakeMaker: 6.42
+  Test::Base: 0
+  Test::More: 0.94
 configure_requires:
   ExtUtils::MakeMaker: 6.42
 distribution_type: module
@@ -19,9 +21,8 @@ no_index:
     - inc
     - t
 requires:
-  Filter::Util::Call: 0
   Text::MicroTemplate: 0.13
 resources:
   license: http://dev.perl.org/licenses/
   repository: git://github.com/typester/text-microtemplate-extended-perl.git
-version: 0.10
+version: 0.11
