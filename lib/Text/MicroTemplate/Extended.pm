@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use base 'Text::MicroTemplate::File';
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 sub new {
     my $self = shift->SUPER::new(@_);
@@ -197,7 +197,7 @@ sub build {
     my $die_msg;
     {
         local $@;
-        if (my $builder = $self->eval_builder) {
+        if (my $builder = $self->eval_builder($offset)) {
             return $builder;
         }
         $die_msg = $self->_error($@, 2 + $offset, $context->{caller});
