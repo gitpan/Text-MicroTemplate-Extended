@@ -20,4 +20,4 @@ no_index:
 requires:
   Filter::Util::Call: 0
   Text::MicroTemplate: 0.18
-version: 0.16
+version: 0.17
